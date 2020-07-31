@@ -4,49 +4,53 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import Axios from 'axios';
 
 
 const Planetas = (props) => {
-  const [planetas, setPlanetas] = useState([])
-  const [nomeplaneta, setNomePlanetas] = useState('')
-  const [clima, setClima] = useState([])
+  const [planeta, setPlaneta] = useState({
+    nome: '',
+    rotation_period: '',
+    orbital_period: '',
+    diameter: '',
+    climat: '',
+    population: '',
+    residents: [],
+    films: []
+    
 
-  const Filmes = (props) => {
-    const [filmes, setFilmes] = useState([])
-    const [nomefilme, setNomeFilme] = useState('')
-
-
-  }
-
-  const onPressTitle = () => {
-    console.log('Title pressed')
-
-  };
-  const buscarPersonagens = async () => {
-    try {
-
-      const response = await fetch(`https://swapi.dev/api/peoples/?search=${nomepersonagem}`);
-
-      const dataJson = await response.json();
-      setPlanetas(dataJson.results)
-      //console.log(dataJson);
-      //  setPlanetas(dataJson);
-
-    } catch (error) {
-      // console.log(error);
-    }
-    // console.log(nomefilme);
-  }
+  })
+  const [nomeplaneta, setNomePlaneta] = useState('')
 
   const buscarPlaneta = async () => {
     try {
 
-      const response = await fetch(`https://swapi.dev/api/planets/?search=${nomeplaneta}`);
+      const { data } = await Axios.get(`https://swapi.dev/api/planets/?search=${nomeplaneta}`);
+      let planeta = data.results[0];
+      const filmes = [];
+      for (const [a, url] of planeta.films.entries()) {
+        const filme = await Axios.get(url);
+        filmes.push({
+          nomeFilme: filme.data.title,
+          linkFilm: url
+        })
+      }
+      planeta.films = filmes;
+      const residentes = [];
+      for (const [b, url2] of planeta.residents.entries()) {
+        const residente = await Axios.get(url2);
+        residentes.push({
+          nomeResidente: residente.data.name,
+          linkResidente: url2
+        })
+      }
+      planeta.residents = residentes;
+      setPlaneta(planeta);
 
-      const dataJson = await response.json();
-      setPlanetas(dataJson.results)
-      //console.log(dataJson);
-      //  setPlanetas(dataJson);
+
+     
+      
+
 
     } catch (error) {
       console.log(error);
@@ -55,73 +59,64 @@ const Planetas = (props) => {
   }
 
 
-
   return (
     <View style={styles.container}>
+      {planeta.nome !== '' &&
+        <ScrollView>
+          <Text style={styles.container5}>________________________________________________________</Text>
+          <View key={planeta.name}>
+            <Text style={styles.container2}>
+              <Text style={styles.container3}>Nome:</Text><Text style={styles.container6}>{planeta.name}</Text>
+            </Text>
+            <Text style={styles.container2}>
+              <Text style={styles.container3}>Periodo de Rotação:</Text> <Text style={styles.container6}>{planeta.rotation_period}</Text>
+            </Text>
+            <Text style={styles.container2}>
+              <Text style={styles.container3}>Periodo de órbita: </Text><Text style={styles.container6}>{planeta.orbital_period}</Text>
+            </Text>
+            <Text style={styles.container2}>
+              <Text style={styles.container3}>Diâmetro:</Text><Text style={styles.container6}> {planeta.diameter}</Text>
+            </Text>
+            <Text style={styles.container2}>
+              <Text style={styles.container3}>Clima:</Text><Text style={styles.container6}> {planeta.climate}</Text>
+            </Text>
+            <Text style={styles.container2}>
+              <Text style={styles.container3}>População:</Text> {planeta.population}
+            </Text>
 
-      <ScrollView>
-        <Text style={styles.container5}>________________________________________________________</Text>
-        {
-
-
-          planetas.map(planetas => {
-            return (
-              <View key={planetas.name}>
-                <Text style={styles.container2}>
-                  <Text style={styles.container3}>Nome:</Text><Text style={styles.container6}>{planetas.name}</Text>
-                </Text>
-                <Text style={styles.container2}>
-                  <Text style={styles.container3}>Periodo de Rotação:</Text> <Text style={styles.container6}>{planetas.rotation_period}</Text>
-                </Text>
-                <Text style={styles.container2}>
-                  <Text style={styles.container3}>Periodo de órbita: </Text><Text style={styles.container6}>{planetas.orbital_period}</Text>
-                </Text>
-                <Text style={styles.container2}>
-                  <Text style={styles.container3}>Diâmetro:</Text><Text style={styles.container6}> {planetas.diameter}</Text>
-                </Text>
-                <Text style={styles.container2}>
-                  <Text style={styles.container3}>Clima:</Text><Text style={styles.container6}> {planetas.climate}</Text>
-                </Text>
-                <Text style={styles.container2}>
-                  <Text style={styles.container3}>População:</Text> {planetas.population}
-                </Text>
-
-                <View>
-                  <Text style={styles.container4}>
-                    Clique em cima dos links Para visualizar os Filmes que o planeta apareceu:
+            <View>
+              <Text style={styles.container4}>
+                Clique em cima dos links Para visualizar os Filmes que o planeta apareceu:
                   </Text>
-                  {planetas.films.map(film => (
-                    <TouchableOpacity key={film} onPress={() => props.navigation.navigate('InformacoesFilmes', {
-                      linkfilm: film
-                    })}>
-                      <Text style={styles.container2}>
-                        {film}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                  <Text style={styles.container4}>
-                    Clique em cima dos links Para visualizar os Residentes do planeta:
+              {planeta.films.map(filme => (
+                <TouchableOpacity key={filme.linkFilm} onPress={() => props.navigation.navigate('InformacoesFilmes', {
+                  linkfilm: filme.linkFilm
+                })}>
+                  <Text style={styles.container2}>
+                    {filme.nomeFilme}
                   </Text>
-                  {planetas.residents.map(resident => (
-                    <TouchableOpacity key={resident} onPress={() => props.navigation.navigate('InformacoesResidentes', {
-                      linkresident: resident
-                    })}>
-                      <Text style={styles.container2}>
-                        {resident}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-                <Text style={styles.container5}>________________________________________________________</Text>
-              </View>
-            )
-          })
-
-        }
-      </ScrollView>
+                </TouchableOpacity>
+              ))}
+              <Text style={styles.container4}>
+                Clique em cima dos links Para visualizar os Residentes do planeta:
+                  </Text>
+              {planeta.residents.map(residente => (
+                <TouchableOpacity key={residente.linkresidente} onPress={() => props.navigation.navigate('InformacoesResidentes', {
+                  linkresident: residente.linkResidente
+                })}>
+                  <Text style={styles.container2}>
+                    {residente.nomeResidente}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.container5}>________________________________________________________</Text>
+          </View>
+        </ScrollView>
+      }
       <View>
         <Text style={styles.container7}>Nome:</Text>
-        <TextInput style={styles.input1} value={nomeplaneta} onChangeText={(text) => setNomePlanetas(text)} />
+        <TextInput style={styles.input1} value={nomeplaneta} onChangeText={(text) => setNomePlaneta(text)} />
       </View>
       <View>
         <TouchableOpacity onPress={buscarPlaneta} style={styles.button1}>

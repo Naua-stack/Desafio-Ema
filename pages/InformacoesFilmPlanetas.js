@@ -5,12 +5,14 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import Filmes from './Filmes';
 import { ScrollView } from 'react-native-gesture-handler';
+import Personagens from './Personagens';
+import Axios from 'axios';
+import Planetas from './Planetas';
+
 
 const InformacoesFilmplanetas = (props) => {
     const [infofilmes, setInfoFilmes] = useState({
-        title: '',
-        episode_id: '',
-        Opening_crawl: '',
+        
         characters: [],
         planets: [],
 
@@ -18,18 +20,41 @@ const InformacoesFilmplanetas = (props) => {
     })
     useEffect(() => {
         const linkfilm = props.route.params.linkfilm;
-        console.log(linkfilm)
+        // console.log(linkfilm)
         const infolink = async () => {
             try {
-                const response = await fetch(linkfilm);
-                const dataJson = await response.json();
-                setInfoFilmes(dataJson)
+                const filme = await (await Axios.get(linkfilm)).data;
+                const personagens = [];
+                for (const [a, url] of filme.characters.entries()) {
+                    const personagem = await Axios.get(url);
+                    personagens.push({
+                      nomePersonagem: personagem.data.name,
+                      linkpersonagem: url
+                    })
+                  } 
+                  filme.characters= personagens;
+                
+                  const planetas = [];
+                  for (const [a, url] of filme.planets.entries()) {
+                      const planeta = await Axios.get(url);
+                      planetas.push({
+                        nomePlaneta: planeta.data.name,
+                        linkPlaneta: url
+                      })
+                    } 
+                filme.planets= planetas;
+                
+                  setInfoFilmes(filme)
+                console.log(filme);
                 console.log(dataJson);
             } catch (error) {
                 console.log(error);
             }
         }
+        
         infolink();
+        
+        
     }, [])
     return (
         <View style={styles.container1}>
@@ -51,11 +76,11 @@ const InformacoesFilmplanetas = (props) => {
                         Clique em cima dos links Para visualizar os personagens que participaram do filme:
                     </Text>
                     {infofilmes.characters.map(characters => (
-                        <TouchableOpacity key={characters} onPress={() => props.navigation.navigate('InformacoesResidentes', {
-                            linkresident: characters
+                        <TouchableOpacity key={characters.linkpersonagem} onPress={() => props.navigation.navigate('InformacoesResidentes', {
+                            linkresident: characters.linkpersonagem
                         })}>
                             <Text style={styles.container2}>
-                                {characters}
+                                {characters.nomePersonagem}
                             </Text>
                         </TouchableOpacity>
                     ))}
@@ -63,11 +88,11 @@ const InformacoesFilmplanetas = (props) => {
                         Clique em cima dos links Para visualizar os planetas que apareceram no filme:
                     </Text>
                     {infofilmes.planets.map(resident => (
-                        <TouchableOpacity key={resident} onPress={() => props.navigation.navigate('InformacoesPlanetas', {
-                            linkresident: resident
+                        <TouchableOpacity key={resident.linkPlaneta} onPress={() => props.navigation.navigate('InformacoesPlanetas', {
+                            linkresident: resident.linkPlaneta
                         })}>
                             <Text style={styles.container2}>
-                                {resident}
+                                {resident.nomePlaneta}
                             </Text>
                         </TouchableOpacity>
                     ))}

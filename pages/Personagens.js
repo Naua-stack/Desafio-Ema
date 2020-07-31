@@ -3,27 +3,37 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import Axios from 'axios';
 
 const Personagens = (props) => {
-    const [Personagens, setPersonagens] = useState([])
+    const [Personagem, setPersonagem] = useState({
+        nome: '',
+        birth_year: '',
+        gender: '',
+        films: [],
+
+   
+    
+    })
     const [nomepersonagens, setNomePersonagens] = useState('')
-    const [generopersonagens, setGeneroPersonagens] = useState('')
+   
 
-    const onPressTitle = () => {
-
-        console.log('Title pressed')
-
-    };
-
+   
     const buscarPersonagens = async () => {
         try {
-
-            const response = await fetch(`https://swapi.dev/api/people/?search=${nomepersonagens}`);
-
-            const dataJson = await response.json();
-            setPersonagens(dataJson.results)
-            //console.log(dataJson);
-            //  setPlanetas(dataJson);
+            const { data } = await Axios.get(`https://swapi.dev/api/people/?search=${nomepersonagens}`);
+            let Personagem = data.results[0];
+            const filmes = [];
+            for (const [a, url] of Personagem.films.entries()) {
+              const filme = await Axios.get(url);
+              filmes.push({
+                nomeFilme: filme.data.title,
+                linkFilm: url
+              })
+            }
+            Personagem.films = filmes;
+            setPersonagem(Personagem);
+           
 
         } catch (error) {
             console.log(error);
@@ -32,45 +42,43 @@ const Personagens = (props) => {
     }
     return (
         <View style={styles.container}>
-            <ScrollView>
-                <Text style={styles.container5}>________________________________________________________</Text>
-                {
-                    Personagens.map(Personagens => {
-                        return (
+            {Personagem.nome !== '' &&
+                <ScrollView>
+                    <Text style={styles.container5}>________________________________________________________</Text>
+                        <View key={Personagem.name}>
+                        <Text style={styles.container2} >
+                            <Text style={styles.container3}>Nome:</Text><Text style={styles.container6}> {Personagem.name} </Text>
+                        </Text>
+                        <Text style={styles.container2} >
+                            <Text style={styles.container3}>Ano de Aniversário:</Text><Text style={styles.container6}> {Personagem.birth_year}</Text>
+                        </Text>
+                        <Text style={styles.container2}>
+                            <Text style={styles.container3}>Gênero:</Text><Text style={styles.container6}> {Personagem.gender} </Text>
+                        </Text>
+                        <View>
 
-                            <View key={Personagens.name}>
-                                <Text style={styles.container2} >
-                                    <Text style={styles.container3}>Nome:</Text><Text style={styles.container6}> {Personagens.name} </Text>
-                                </Text>
-                                <Text style={styles.container2} >
-                                    <Text style={styles.container3}>Ano de Aniversário:</Text><Text style={styles.container6}> {Personagens.birth_year}</Text>
-                                </Text>
-                                <Text style={styles.container2}>
-                                    <Text style={styles.container3}>Gênero:</Text><Text style={styles.container6}> {Personagens.gender} </Text>
-                                </Text>
-                                <View>
-
-                                    <Text style={styles.container4}>
-                                        Clique em cima dos links Para visualizar os Filmes que o Personagem apareceu:
+                            <Text style={styles.container4}>
+                                Clique em cima dos links Para visualizar os Filmes que o Personagem apareceu:
                                      </Text>
 
-                                    {Personagens.films.map(film => (
-                                        <TouchableOpacity key={film} onPress={() => props.navigation.navigate('InformacoesFilmes', {
-                                            linkfilm: film
-                                        })}>
-                                            <Text style={styles.container2}>
-                                                {film}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                    <Text style={styles.container5}>________________________________________________________</Text>
-                                </View>
-                            </View>
-                        )
-                    })
-                }
-            </ScrollView>
+                            {Personagem.films.map(film => (
+                                <TouchableOpacity key={film.linkFilm} onPress={() => props.navigation.navigate('InformacoesFilmes', {
+                                    linkfilm: film.linkFilm
+                                })}>
+                                    <Text style={styles.container2}>
+                                        {film.nomeFilme}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                            
+                        </View>
+                        <Text style={styles.container5}>________________________________________________________</Text>
+                    </View>
 
+
+
+                </ScrollView>
+            }
             <View>
                 <Text style={styles.container7}>Nome:</Text>
                 <TextInput style={styles.input1} value={nomepersonagens} onChangeText={(text) => setNomePersonagens(text)} />
@@ -156,7 +164,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#fff',
         fontSize: 15,
-      }
+    }
 
 });
 

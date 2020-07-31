@@ -5,11 +5,12 @@ import { Colors } from 'react-native/Libraries/NewAppScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import Personagens from './Personagens';
+import Axios from 'axios';
 
 const Informacoesplanetas = (props) => {
 
     const [inforesidentes, setInfoResidentes] = useState({
-
+       
         films: []
 
     }
@@ -19,17 +20,23 @@ const Informacoesplanetas = (props) => {
 
     useEffect(() => {
         const linkresident = props.route.params.linkresident;
-        console.log(linkresident)
+       // console.log(linkresident)
         const infolink = async () => {
             try {
-
-                const response = await fetch(linkresident);
-                const dataJson = await response.json();
-
-                setInfoResidentes(dataJson)
-                console.log(dataJson);
-
-
+                console.log(linkresident)
+                
+                const residente = await (await Axios.get(linkresident)).data;
+                const filmes = [];
+                for (const [a, url] of residente.films.entries()) {
+                  const filme = await Axios.get(url);
+                  filmes.push({
+                    nomeFilme: filme.data.title,
+                    linkFilm: url
+                  })
+                } 
+                
+                residente.films= filmes;
+                setInfoResidentes(residente);
             } catch (error) {
                 console.log(error);
             }
@@ -55,11 +62,11 @@ const Informacoesplanetas = (props) => {
                         Clique em cima dos links Para visualizar os Filmes que o Personagem apareceu:
                     </Text>
                     {inforesidentes.films.map(resident => (
-                        <TouchableOpacity key={resident} onPress={() => props.navigation.navigate('InformacoesFilmes', {
-                            linkfilm: resident
+                        <TouchableOpacity key={resident.linkFilm} onPress={() => props.navigation.navigate('InformacoesFilmes', {
+                            linkfilm: resident.linkFilm
                         })}>
                             <Text style={styles.container2}>
-                                {resident}
+                                {resident.nomeFilme}
                             </Text>
                         </TouchableOpacity>
                     ))}

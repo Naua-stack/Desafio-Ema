@@ -5,6 +5,7 @@ import { Colors } from 'react-native/Libraries/NewAppScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import Personagens from './Personagens';
+import Axios from 'axios';
 
 const Informacoesplanetas = (props) => {
 
@@ -21,11 +22,29 @@ const Informacoesplanetas = (props) => {
         const infolink = async () => {
             try {
 
-                const response = await fetch(linkresident);
-                const dataJson = await response.json();
-
-                setInfoResidentes(dataJson)
-                console.log(dataJson);
+                const planeta = await (await Axios.get(linkresident)).data;
+                
+                const filmes = [];
+                for (const [a, url] of planeta.films.entries()) {
+                    const filme = await Axios.get(url);
+                    filmes.push({
+                      nomeFilme: filme.data.title,
+                      linkFilme: url
+                    })
+                  } 
+                  planeta.films= filmes;
+                
+                const residentes = [];
+                for (const [a, url] of planeta.residents.entries()) {
+                    const residente = await Axios.get(url);
+                    residentes.push({
+                      nomeResidente: residente.data.name,
+                      linkResidente: url
+                    })
+                  } 
+                planeta.residents= residentes;
+                setInfoResidentes(planeta)
+                
 
 
             } catch (error) {
@@ -63,11 +82,11 @@ const Informacoesplanetas = (props) => {
                     </Text>
                     {Informacoesplanetas.films.map(resident => (
 
-                        <TouchableOpacity key={resident} onPress={() => props.navigation.navigate('InformacoesFilmes', {
-                            linkfilm: resident
+                        <TouchableOpacity key={resident.linkFilme} onPress={() => props.navigation.navigate('InformacoesFilmes', {
+                            linkfilm: resident.linkFilme
                         })}>
                             <Text style={styles.container2}>
-                                {resident}
+                                {resident.nomeFilme}
                             </Text>
                         </TouchableOpacity>
                     ))}
@@ -75,11 +94,11 @@ const Informacoesplanetas = (props) => {
                        Clique em cima dos links Para visualizar os Residentes do Planeta:
                     </Text>
                     {Informacoesplanetas.residents.map(resident => (
-                        <TouchableOpacity key={resident} onPress={() => props.navigation.navigate('InformacoesResidentes', {
-                            linkresident: resident
+                        <TouchableOpacity key={resident.linkResidente} onPress={() => props.navigation.navigate('InformacoesResidentes', {
+                            linkresident: resident.linkResidente
                         })}>
                             <Text style={styles.container2}>
-                                {resident}
+                                {resident.nomeResidente}
                             </Text>
                         </TouchableOpacity>
                     ))}
